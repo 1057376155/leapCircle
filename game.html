@@ -1,16 +1,26 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html> -->
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="screen-orientation"content="portrait"><!--uc禁止横屏-->
+    <meta name="x5-orientation"content="portrait"><!--QQ禁止横屏-->
     <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no,minimal-ui">
     <title>脱离引力</title>
     <style type="text/css">
+    @font-face{
+      font-family: game;
+      src: url('./font/HelveticaNeue-UltraLigExt.otf');
+    }
       html,body{
         width: 100%;
         height:100%;
         overflow: hidden;
         margin:0;
         background:black;
+      }
+      #cover_c{
+        width: 100%;
+        height: 100%;
       }
       #cover{
         width:320px;
@@ -24,191 +34,262 @@
       canvas{
         /*border:red solid 1px;*/
       }
-
+      #endPage{
+        background:black;
+      }
+      #point_c{
+        width: 100%;
+        height: 100px;
+        position: absolute;
+        top: 0;
+        bottom:0;
+        margin: auto;
+        display:none;
+      }
+      #point_c p{
+        color: white;
+        text-align: center;
+        font-family:game;
+      }
+      #Refresh{
+        width: 100px;
+        height: 30px;
+        color: black;
+        font-size: 16px;
+        outline: none;
+        background:white;
+        border:none;
+        display: block;
+        margin: 0 auto;
+      }
+      #Refresh:active{
+        font-size: 15px;
+      }
+      #AddPoint{
+        display: block;
+        font-size: 150px;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        margin: 0;
+        line-height: 568px;
+        text-align: center;
+        opacity: 0.1;
+        font-family:game;
+        font-weight: 100;
+      }
     </style>
   </head>
   <body>
-    <img id="cover" src="./img/face.png" alt="" />
+    <div id="cover_c"><img id="cover" src="./img/face.png" alt="" /></div>
     <canvas id="canvas"></canvas>
+    <div id="point_c">
+      <p id="point">你穿越了167颗星球</p>
+       <input type="button" id="Refresh" value="重玩" />
+    </div>
+    <h1 id="AddPoint">0</h1>
   </body>
   <script type="text/javascript">
-    var canvas=document.getElementById("canvas");
-    var context=canvas.getContext("2d");
-    var cover=document.getElementById("cover");
-    var winW=window.innerWidth;
-    var winH=window.innerHeight;
+    var canvas=document.getElementById("canvas");//获取画布对象
+    var context=canvas.getContext("2d");//产生上下文对象
+    var cover=document.getElementById("cover");//获取封面对象
+    var cover_c=document.getElementById("cover_c");//获取封面容器对象
+    var point_c=document.getElementById("point_c");//存分数的容器
+    var pointText=document.getElementById("point");//显示分数
+    var AddPoint=document.getElementById("AddPoint");
+    var winW=window.innerWidth;//获取窗口的宽
+    var winH=window.innerHeight;//获取窗口的高
     var count=5;//障碍物的数量
     var AllXY=[];//用来存储所有障碍物的坐标
+    var AllY=[];//用来保存Y轴的坐标
     var circleStop;//停止做圆周运动的清除id;
     var lineStop;//停止做直线运动的id;
     var moveDownIsStop=false;//该变量存储下移动画是否结束
     var linePathIsStop=true;//该变量存储直线运动是否结束
     var circlePathIsStop=false;//该变量存储圆周运动是否结束
-    var point=0;
+    var point=0;//初始化的时候，设置分数为
+    // var offsetBottom=parseInt(winH/count);//一次的下移量
     var Contant={//存储碰撞到障碍物时，障碍物的坐标
-      x:0,//获取碰撞障碍物的x坐标
-      y:0,//获取碰撞障碍物的y坐标
-      startRadian:0,
-      result:null,
+      x:-100,//获取碰撞障碍物的x坐标
+      y:-100,//获取碰撞障碍物的y坐标
+      startRadian:0,//保存圆周运动的开始位置
+      result:null,//设置结构为0
     }
-    var thisHub={//设置一个对象保存当前飞船围绕的中心
-      centerX:0,
-      centerY:0,
-      radian:0,
+    var thisHub={//设置一个对象保存飞船距离最近的障碍坐标
+      //当碰撞之后就变成碰撞到的那个障碍物的坐标
+      //当点击离开障碍做直线运动的时候，保存的是离开的那个障碍物的坐标
+      centerX:0,//设置初始化x轴为0
+      centerY:0,//设置初始化y轴为0
     }
-    canvas.width=winW;
-    canvas.height=winH;
-
-    // DrawImg("./img/face.png",'center','center');//绘制封面
-    cover.onclick=function(){
-      var width=parseInt(getStyle(cover).width);
-      var time=setInterval(function(){
+    if(winW<=320){//如果宽度小于等于320,设置为320，并且设置overflow为auto
+      winW=320;
+      document.body.style.overflow="auto";
+    };
+    if(winH<=400){//如果高度小于等于400,设置为400，并且设置overflow为auto
+      winH=400;
+      document.body.style.overflow="auto";
+    }
+    canvas.width=winW;//设置绘图的宽
+    canvas.height=winH;//设置绘图的高
+    cover_c.onclick=function(){//当点击封面容器的时候执行函数体内的行为
+      var width=parseInt(getStyle(cover).width);//获取图像的宽度
+      var time=setInterval(function(){//做一个简单的过度动画
         width-=20;
         cover.style.width=width+'px';
-        if(width<=20){
+        if(width<=0){
           clearInterval(time);
-          document.body.removeChild(cover);
+          document.body.removeChild(cover_c);
           document.body.style.background="white";
-
+          AddPoint.style.position="absolute";
+          AddPoint.style.lineHeight=winH+"px";
         }
       },10);
     }//初始化界面，点击进入游戏界面
-    canvas.onclick=function(){//点击canvas开始游戏
-      clearInterval(circleStop);
-      circlePathIsStop=true;
-      console.log("当前直线动画的运行情况"+linePathIsStop)
-      console.log("当前圆周动画的运行情况"+circlePathIsStop)
-      console.log("当前下移动画的运行情况"+moveDownIsStop)
-      //直线动画停止
-      //圆周动画正在进行
-      //下移动画停止
-      if(linePathIsStop&&!moveDownIsStop&&circlePathIsStop){
-          LinePath(thisHub.centerX,thisHub.centerY);
-      }
-    };
-    function init(){
-     for (var i = 1; i <=count*2;i+=2){//获取固定的y坐标
-       var startX=getRandomX();
-       var startY=parseInt((winH/(count*2))*i);
+    AddPoint.addEventListener("touchstart",function(){//兼容手机端
+        clearInterval(circleStop);
+        circlePathIsStop=true;//设置圆周运动的状态为停止
+        //直线动画停止
+        //圆周动画正在进行
+        //下移动画停止
+        //以上条件都成立的时候才能执行直线运动
+        if(linePathIsStop&&!moveDownIsStop&&circlePathIsStop){
+            LinePath(thisHub.centerX,thisHub.centerY);//
+        }
+    });
+    AddPoint.addEventListener("onmousedown",function(){//pc端
+        clearInterval(circleStop);
+        circlePathIsStop=true;//设置圆周运动的状态为停止
+        //直线动画停止
+        //圆周动画正在进行
+        //下移动画停止
+        //以上条件都成立的时候才能执行直线运动
+        if(linePathIsStop&&!moveDownIsStop&&circlePathIsStop){
+            LinePath(thisHub.centerX,thisHub.centerY);//
+        }
+    });
+
+
+    Refresh.onclick=function(){//重新玩游戏
+     window.location=window.location;
+    }
+    function init(){//初始化函数
+     for (var i = 1; i <=count*2;i+=2){//循环生成障碍物
+       var startX=getRandomX();//获取随机的x坐标
+       var startY=parseInt((winH/(count*2))*i);//获取固定的y坐标
        drawCircle(startX,startY,30,'stroke');//绘制
-       AllXY.push(startX,startY);
-       console.log("x:"+startX+"y:"+startY);
+       AllXY.push(startX,startY);//AllXY数组保存每一个障碍物的x和y坐标
+       AllY.push(startY);
      }
    };//初始化界面的星球障碍物
 
     var skyBoat={//定义一个飞船对象
-      x:AllXY[0]-30,
-      y:AllXY[1]-30,
-      vx:1,
-      vy:1,
-      r:5,
-      color:"black",
-      draw:function(type,centerX,centerY){
-          if(!centerX){}
-          if(!centerY){}
-          switch(type){
-            case "line":
-              LinePath(skyBoat.x,skyBoat.y,skyBoat);
-            break;
-            case "circle":
-              circlePath(centerX,centerY,skyBoat);
-            break;
-          }
-      }
+      x:AllXY[0]-30,//默认的飞船X坐标是在第一个障碍物的圆周上，即是障碍物的x坐标减去半径
+      y:AllXY[1]-30,//默认的飞船Y坐标是在第一个障碍物的圆周上，即是障碍物的y坐标减去半径
+      vx:1,//设置x坐标的加速度
+      vy:1,//设置y坐标的加速度
+      r:5,//设置飞船的半径
+      color:"black",//设置颜色
     }
-
+    var barrier={//定义一个障碍物的通用属性
+      r:30,//设置障碍物的半径为30
+    }
     init();//点击进去之后初始化图像界面
     drawCircle(skyBoat.x,skyBoat.y,skyBoat.r,'fill');//初始化飞船
-    skyBoat.draw("circle",AllXY[AllXY.length-2],AllXY[AllXY.length-1]);//初始化飞船做圆周运动
-    function DrawImg(path,imgX,imgY,imgW,imgH){//DrawImg绘制图像的方法
-      //DrawImg绘制图像的方法
-      //传入的参数有图像的路径--path
-      //-----------图像的x坐标-imgX //imgX有left,center,right快速定位的方式
-      //-----------图像的y坐标-imgy //imgY有top,center,right快速定位的方式
-      //-----------图像的宽度--imgW
-      //-----------图像的高度--imgH
-      var img=new Image();//创建图像实例
-      img.src=path;
-      // alert(typeof(imgX));
-      if(typeof(imgX)!=="number"){//如果传入的参数不是数字
-        if(imgW)img.width=imgW;
-        if(imgH)img.height=imgH;
-        switch(imgX){
-          case "left":imgX=0;
-          break;
-          case "center":imgX=winW/2-img.width/2;
-          break;
-          case "right":imgX=winW-img.width;
-          break;
-          default:console.log("参数错误");
-        }
-        switch(imgY){
-          case "top":imgY=0;
-          break;
-          case "center":imgY=winH/2-img.height/2;
-          break;
-          case "bottom":imgY=winH-img.height;
-          break;
-          default:console.log("参数错误");
-        }
-      }
-      if(!imgX)imgX=imgX;
-      if(!imgY)imgY=imgY;
-      if(!imgW)imgW=img.width;
-      if(!imgH)imgH=img.height;
-      img.onload=function(){
-        context.drawImage(img,imgX,imgY,imgW,imgH);
-      }
-    }
+    circlePath(AllXY[AllXY.length-2],AllXY[AllXY.length-1],skyBoat);//初始化做圆周运动
+    context.globalAlpha=0.9//设置全局的透明值
+
     function getStyle(obj){//获取样式的一个方法
       var style=null;
       if(window.getComputedStyle){
-        style=window.getComputedStyle(obj,null);
+        style=window.getComputedStyle(obj,null);//火狐谷歌支持
       }else{
-        style=obj.currentStyle;
+        style=obj.currentStyle;//ie支持
       }
       return style;
     }
     function drawCircle(x,y,r,type){//绘制圆的一个方法
+      // drawText(point);
       context.beginPath();
       context.arc(x,y,r,0,2*Math.PI);
       switch(type){
-        case "stroke":context.stroke();
+        case "stroke":
+          context.strokeStyle="rgba(0,0,0,1)";
+          context.stroke();
         break;
-        case "fill":context.fill();
+        case "fill":
+          context.fillStyle="black";
+          context.fill();
         break;
         default:
         console.log("参数错误");
       }
       context.closePath();
+
     }
     function LinePath(centerX,centerY){//飞船直线运动的一个方法
-      var x3=skyBoat.x;//将skyBoat.x的值暂时保存在x3中
-      linePathIsStop=false;
+
+      //传入的centerX指的是飞船没有碰撞到障碍物之前的那个障碍物的X坐标
+      //传入的centerY指的是飞船没有碰撞到障碍物之前的那个障碍物的Y坐标
+      var x3=parseFloat(skyBoat.x.toFixed(2));//将skyBoat.x的值暂时保存在x3中
+      var y3=parseFloat(skyBoat.y.toFixed(2));//将skyBoat.x的值暂时保存在x3中
+      linePathIsStop=false;//设置直线运动的状态为运动
       lineStop=setInterval(function(){
         context.clearRect(0,0,winW,winH);//清除上一个位置的绘制图像
-        // centerX=Math.round(centerX);
-        // centerY=Math.round(centerY);
-        // skyBoat.x=Math.round(skyBoat.x);
-        // skyBoat.y=Math.round(skyBoat.y);
-        //将坐标转为整数
-        if(centerX>skyBoat.x){
-          x3-=0.5;
-          var y3=drawLinear(skyBoat.x,skyBoat.y,centerX,centerY,x3);
+        //判断运动坐标是从哪个象限开始触发，才能得出飞船的直线方向
+        if(centerX<skyBoat.x&&centerY>skyBoat.y){
+          // 第一象限
+           y3-=1;
+           y3=parseFloat(y3.toFixed(2));
+           x3=getx3(skyBoat.x,skyBoat.y,centerX,centerY,y3);
         }
-        if(centerX<skyBoat.x){
-          x3+=0.5;
-          var y3=drawLinear(centerX,centerY,skyBoat.x,skyBoat.y,x3);
+        if(centerX>skyBoat.x&&centerY>skyBoat.y){
+          // 第二象限
+           y3-=1;
+           y3=parseFloat(y3.toFixed(2));
+           x3=getx3(skyBoat.x,skyBoat.y,centerX,centerY,y3);
         }
-        // if(centerX==skyBoat.x){
-        //   y3=0;
-        // }
-        // if(centerY==skyBoat.y){
-        //   x3=0;
-        // }
+        if(centerX>skyBoat.x&&centerY<skyBoat.y){
+          // 第三象限
+           x3-=1;
+           x3=parseFloat(x3.toFixed(2));
+           y3=gety3(skyBoat.x,skyBoat.y,centerX,centerY,x3);
+        }
+        if(centerX<skyBoat.x&&centerY<skyBoat.y){
+          // 第四象限
+           x3+=1;
+           x3=parseFloat(x3.toFixed(2));
+           y3=gety3(skyBoat.x,skyBoat.y,centerX,centerY,x3);
+        }
+        if(centerX==skyBoat.x){
+          // 垂直于x)
+            if(centerX>skyBoat.x){
+              //向下移动
+               y3+=1;
+            }else{
+              //向上移动
+              y3-=1;
+            }
+           x3=skyBoat.x;
+        }
+        if(centerY==skyBoat.y){
+          console.log("垂直于y轴");
+            if(centerY>skyBoat.y){
+              //向左移动
+               x3-=0.5;
+            }else{
+              //向右移动
+              x3+=0.5;
+            }
+           y3=skyBoat.y;
+        }
         //以上的代码是使飞船做正确的直线运动
-        if(x3<0||x3>=winW||y3<0||y3>=winH){
-          alert("游戏结束，你穿越了"+point+"星球");
+        if(x3<0||x3>=winW||y3<0||y3>=winH){//判断是否超过界限;
+          canvas.id="endPage"
+          //显示分数
+          point_c.style.display="block";
+          document.body.removeChild(AddPoint);
+          pointText.innerText="你穿越了"+point+"颗星球";
+
           clearInterval(lineStop);
           linePathIsStop=true;
         }
@@ -216,10 +297,12 @@
         var r=isContact(AllXY,x3,y3)//返回一个对象,可以得出是否与障碍产生碰撞
         if(r){
           if(r.result===false){
-            skyBoat.x=x3;//发生碰撞时更新skyBoat的x坐标
-            skyBoat.y=y3;//发生碰撞时更新skyBoat的y坐标
+            console.log("发生触碰");
+            // AddPoint.innerText=point;
+            skyBoat.x=parseFloat(x3);//发生碰撞时更新skyBoat的x坐标
+            skyBoat.y=parseFloat(y3);//发生碰撞时更新skyBoat的y坐标
             clearInterval(lineStop);//如果发生碰撞，就停止直线运动
-            linePathIsStop=true;
+            linePathIsStop=true;//设置
             clearInterval(circleStop);//如果发生碰撞，就停止圆周运动
             circlePathIsStop=true;
             var c=getDistance(x3,y3,r.x,r.y-30);//算出c边的长
@@ -227,21 +310,23 @@
             if(x3<r.x){//如果落点在圆心的左边，形成的角度是补角，要360-去补角才得出正确的值
               // var nextRadian=360-Math.acos(cosValue)/(2*Math.PI/360);
               Contant.startRadian=360-Math.acos(cosValue)/(2*Math.PI/360);
+              Contant.startRadian=parseFloat(Contant.startRadian.toFixed(2));//保存两位小数
             }else{//落点在圆心的右边，形成的角是正确的值，不用减去
               // var nextRadian=Math.acos(cosValue)/(2*Math.PI/360);
               Contant.startRadian=Math.acos(cosValue)/(2*Math.PI/360);
+              Contant.startRadian=parseFloat(Contant.startRadian.toFixed(2));//保存两位小数
             }
             // var lastThisHubCenterY=thisHub.centerY;
             //开始做圆周运动以后，把障碍物下移
-            var moveDistance=thisHub.centerY-r.y;
+            var moveDistance=thisHub.centerY-r.y;//求出下移的距离
             var moveNum=moveDistance/winH*count;
-            moveNum=Math.abs(Math.round(moveNum));
+            moveNum=Math.abs(Math.round(moveNum));//求出下移的个数
             // moveDownIsStop=false;
             point+=moveNum;//累加分数
             moveDown(moveNum);//下移动画
           }
         }
-
+        x3=parseFloat(x3.toFixed(2));
         drawCircle(x3,y3,skyBoat.r,'fill');//重新绘制飞船的坐标
         drawMap(AllXY);//绘制障碍物
       },5);
@@ -251,9 +336,13 @@
       return Math.round(Math.random()*(winW-70)+40);
     }
     function circlePath(centerX,centerY,skyBoat,radian){//使飞船做圆周运动
+
+      clearInterval(circleStop);//做运动的时候停止直线运动
+      console.log("开始做圆周运动");
       circlePathIsStop=false;//记录状态是否停止
       thisHub.centerX=centerX;//保存当前飞船围绕的中心坐标X
       thisHub.centerY=centerY;//保存当前飞船围绕的中心坐标Y
+      // var updataText=1;
       if(!radian){
         var i=0;
       }else{
@@ -261,14 +350,22 @@
       }
       clearInterval(circleStop);
       circleStop=setInterval(function(){
+
         // console.log("圆周运动进行中");
+        // drawText(point)
         i++;
         if(i>=360)i=0;
+          // if(i==updataText*i){drawText(point)}
           var radian=(2*Math.PI/360)*i;
-          thisHub.radian=radian;
+          radian=parseFloat(radian.toFixed(2));
+          // thisHub.radian=radian;
           // console.log(radian);
-          skyBoat.x=centerX+Math.sin(radian)*30;
-          skyBoat.y=centerY-Math.cos(radian)*30;
+          // skyBoat.x=centerX+Math.sin(radian)*30;
+          // skyBoat.y=centerY-Math.cos(radian)*30;
+          skyBoat.x=parseFloat((centerX+Math.sin(radian)*30).toFixed(2));
+          skyBoat.y=parseFloat((centerY-Math.cos(radian)*30).toFixed(2));
+          // skyBoat.x=skyBoat.x.toFixed(2);
+          // skyBoat.y=skyBoat.y.toFixed(2);
           clearCircle(centerX,centerY,skyBoat.r);//清除运动物体的位置
           drawCircle(skyBoat.x,skyBoat.y,skyBoat.r,"fill");//绘制运动的物体
           drawCircle(centerX,centerY,30,"stroke");//绘制一个被围绕题
@@ -289,8 +386,16 @@
         drawCircle(AllXY[i*2],AllXY[i*2+1],30,"stroke");
       }
     }
-    function drawLinear(x1,y1,x2,y2,x3){//根据直线方程推导出来的直线路线
-      return (y2-y1)*((x3-x1)/(x2-x1))+y1
+    function gety3(x1,y1,x2,y2,x3){//根据直线方程推导出来的直线路线
+      // return (y2-y1)*((x3-x1)/(x2-x1))+y1
+      var y3=(y2-y1)*((x3-x1)/(x2-x1))+y1;
+      console.log("y轴的坐标保留两位小数点"+y3)
+      return parseFloat(y3.toFixed(2));
+    }
+    function getx3(x1,y1,x2,y2,y3){//根据直线方程推导出来的直线路线
+      // return (y2-y1)*((x3-x1)/(x2-x1))+y1
+      var x3=(x2-x1)*((y3-y1)/(y2-y1))+x1
+      return parseFloat(x3.toFixed(2));
     }
     function isContact(AllXY,x,y){//判断是否碰撞
       //传入含有所有障碍物的坐标数组AllXY和飞船的坐标x,y
@@ -322,30 +427,41 @@
       return distance;
     }
     function moveDown(num){//使障碍物下移的函数
-      var offsetBottom=winH/count;//一次的下移量
+      AddPoint.innerText=point;
+      var offsetBottom=parseInt(winH/count);//一次的下移量
+      //var startY=parseInt((winH/(count*2))*i);
       var stopValue=AllXY[1];//保存第一个y坐标
-      var roll=2;//滚动的速度
+      var roll=5;//滚动的速度
       moveDownIsStop=true;//记录下移动画的状态
       clearInterval(moveDownStop);//每一次进来都清除定时器
       var moveDownStop=setInterval(function(){
         for(var i=0;i<AllXY.length/2;i++){
-          if(AllXY[1]>=stopValue+offsetBottom*num){//如果第一个y坐标的坐标超过移动的坐标，停止动画
+          if(AllXY[1]>stopValue+offsetBottom*num){//如果第一个y坐标的坐标超过移动的坐标，停止动画
             clearInterval(moveDownStop);//如果达到指定的下移数，清除定时器
-            moveDownIsStop=false;
-            AllXY.splice((-2)*num);//因为元素被下移的看不到的地方，所以要清除元素的坐标，清除的数量是传入的数量的2倍，清除的坐标应该是在数组的后面
-            // console.log("删除最后元素后"+AllXY+"数组的长度是"+AllXY.length);
-            for(var j=0;j<num;j++){//补全数组中因为下移而删除的坐标
-              var x=getRandomX();//获取随机x坐标
-              var y=AllXY[1]-offsetBottom;//用数组的第一个y坐标减去每一次下移的距离可以得出上一个y坐标的距离，因为y坐标是固定的
-              AllXY.unshift(x,y)//将坐标添加到数组的前面
+            moveDownIsStop=false;//
+            var deleteXY=AllXY.splice((-2)*num);//因为元素被下移的看不到的地方，所以要清除元素的坐标，清除的数量是传入的数量的2倍，清除的坐标应该是在数组的后面
+            for(var j=num-1;j>=0;j--){//补全数组中因为下移而删除的坐标
+              var addX=getRandomX();//获取随机x坐标
+              var addY=AllY[j];
+              // var addY=AllXY[1]-offsetBottom;//用数组的第一个y坐标减去每一次下移的距离可以得出上一个y坐标的距离，因为y坐标是固定的
+              // var addY=parseInt(winH/(count*2))*(2*j+1);//用数组的第一个y坐标减去每一次下移的距离可以得出上一个y坐标的距离，因为y坐标是固定的
+              AllXY.unshift(addX,addY)//将坐标添加到数组的前面
             }
+            //更新所有的y坐标，因为y坐标的是固定但是经过其他的函数，被改变了，在这个重新矫正y坐标
+            for(var updata=0;updata<AllXY.length/2;updata++){
+              AllXY[updata*2+1]=AllY[updata];
+            }
+            drawMap(AllXY);//重新绘制障碍物
             circlePath(Contant.x,thisHub.centerY,skyBoat,Contant.startRadian);//当下移动画结束的时候,开始执行圆周运动
+            break;//终止for循环
           }else{//如果没有停止下移动画，那么每次都移动roll/(AllXY.length/2);
                 //因为为了与障碍
             skyBoat.y+=roll/(AllXY.length/2);
+            AllXY[2*i+1]+=roll;//没有的达到指定的坐标，每一个y坐标不停的加roll;
           }
-          AllXY[2*i+1]+=roll;//没有的达到指定的坐标，每一个y坐标不停的加roll;
+          // AllXY[2*i+1]+=roll;//没有的达到指定的坐标，每一个y坐标不停的加roll;
         }
+        // console.log("是否改变值后"+AllXY);
         context.clearRect(0,0,winW,winH);//清除界面
         drawMap(AllXY);//重新绘制障碍物
         drawCircle(skyBoat.x,skyBoat.y,skyBoat.r,"fill");//更新飞船的位置
