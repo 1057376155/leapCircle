@@ -1,3 +1,10 @@
-# leapCircle
-一个html5游戏
-https://www.hualigs.cn/image/609a0d3e3a654.jpg
+## 介绍
+
+#### webApp 简单的一个游戏
+---
+## 使用
+---
+#### 1、在 app store 下载 webs app
+#### 2、下载 zip
+#### 3、webs app 右上角 + 导入 zip
+---
