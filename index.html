@@ -81,7 +81,7 @@
     </style>
   </head>
   <body>
-    <div id="cover_c"><img id="cover" src="./img/face.png" alt="" /></div>
+    <div id="cover_c"><img id="cover" src="./icon.png" alt="" /></div>
     <canvas id="canvas"></canvas>
     <div id="point_c">
       <p id="point">你穿越了167颗星球</p>
@@ -129,8 +129,9 @@
       winH=400;
       document.body.style.overflow="auto";
     }
-    canvas.width=winW;//设置绘图的宽
-    canvas.height=winH;//设置绘图的高
+    var dpr = (scale = window.devicePixelRatio || 1);
+    canvas.width=winW*dpr;//设置绘图的宽
+    canvas.height=winH*dpr;//设置绘图的高
     cover_c.onclick=function(){//当点击封面容器的时候执行函数体内的行为
       var width=parseInt(getStyle(cover).width);//获取图像的宽度
       var time=setInterval(function(){//做一个简单的过度动画
