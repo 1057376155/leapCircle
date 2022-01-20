@@ -29,14 +29,21 @@ jobs:
           zip -q -r leapCircle.zip ./
           ls
           echo "The time was ${{ env.webApp_version }}, ${{ env.webApp_name }}"
-      - uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      
+      - uses: ncipollo/release-action@v1
         with:
-          tag_name: v${{ env.webApp_version }}
-          release_name: v${{ env.webApp_version }}
-          body_path: "leapCircle.zip"
-          body: |
-            update
-          draft: false
-          prerelease: false
+          tag: v${{ env.webApp_version }}
+          name: v${{ env.webApp_version }}
+          artifacts: "leapCircle.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+#       - uses: actions/create-release@v1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+#         with:
+#           tag_name: v${{ env.webApp_version }}
+#           release_name: v${{ env.webApp_version }}
+#           body_path: "leapCircle.zip"
+#           body: |
+#             update
+#           draft: false
+#           prerelease: false
