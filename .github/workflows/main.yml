@@ -19,9 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run a one-line script
-        run: ls
-      - name: Run a multi-line script
+      - name: 读取webApp json 的信息
+        uses: antifree/json-to-variables@v1.0.1
+        with:
+          filename: 'webApp.json'
+          prefix: webApp
+      - name: 打包成zip
         run: |
           zip -q -r leapCircle.zip ./
           ls
@@ -29,8 +32,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ env.webApp_version }}
+          release_name: Release ${{ env.webApp_name }}
+          bodyFile: ./leapCircle.zip
           body: |
             update
           draft: false
