@@ -35,7 +35,7 @@ jobs:
         with:
           tag_name: v${{ env.webApp_version }}
           release_name: v${{ env.webApp_version }}
-          bodyFile: "leapCircle.zip"
+          body_path: "leapCircle.zip"
           body: |
             update
           draft: false
