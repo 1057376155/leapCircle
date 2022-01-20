@@ -30,7 +30,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "leapCircle.zip"
-          tab: v${{ env.webApp_version }}
+          tag: v${{ env.webApp_version }}
           name:  v${{ env.webApp_version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 #       - uses: actions/create-release@v1
