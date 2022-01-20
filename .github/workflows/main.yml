@@ -27,15 +27,12 @@ jobs:
       - name: 打包成zip
         run: |
           zip -q -r leapCircle.zip ./
-          ls
-          echo "The time was ${{ env.webApp_version }}, ${{ env.webApp_name }}"
-      
       - uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: v${{ env.webApp_version }}
-          release_name: v${{ env.webApp_version }}
+          tag_name: v1.0.5 #${{ env.webApp_version }}
+          release_name: v1.0.5 #v${{ env.webApp_version }}
           body: |
             update
           draft: false
