@@ -24,9 +24,10 @@ jobs:
         with:
           filename: 'webApp.json'
           prefix: webApp
-      - name: 打包成zip
+      - name: 打包成zip 同时给gitee 同步信息
         run: |
           zip -q -r leapCircle.zip ./
+          curl -X POST --header 'Content-Type: application/json;charset=UTF-8' 'https://gitee.com/api/v5/repos/coooor/leapCircle/releases' -d '{"access_token":"${{ secrets.GITEETOKEN }}","tag_name":"v${{ env.webApp_version }}","name":"${{ env.webApp_version }}","body":"${{ env.webApp_version }}","prerelease":"false","target_commitish":"master"}'
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "leapCircle.zip"
