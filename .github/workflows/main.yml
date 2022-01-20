@@ -27,24 +27,23 @@ jobs:
       - name: 打包成zip
         run: |
           zip -q -r leapCircle.zip ./
-          
+           echo ${{ steps.create_release.outputs.upload_url }}
       - uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: v1.0.5 #${{ env.webApp_version }}
-          release_name: v1.0.5 #v${{ env.webApp_version }}
-          body_path: leapCircle.zip
-#           body: |
-#             update
+          tag_name: v${{ env.webApp_version }}
+          release_name: v${{ env.webApp_version }}
+          body: |
+            update
           draft: false
           prerelease: false
-#       - name: 上传构建结果到 Release
-#         id: upload-release-asset
-#         uses: actions/upload-release-asset@master
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         with:
-#           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-#           asset_path: ./leapCircle.zip # 要上传文件
-#           asset_name: leapCircle.zip # 上传后的文件名
+      - name: 上传构建结果到 Release
+        id: upload-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./leapCircle.zip # 要上传文件
+          asset_name: leapCircle.zip # 上传后的文件名
